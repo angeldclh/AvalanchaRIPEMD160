@@ -6,7 +6,7 @@
 int main(int argc, char **argv){
 
 	// Comprobar número argumentos
-	if(argc != 1 || argc != 3){
+	if(argc != 1 && argc != 3){
 		fprintf(stderr, "Número incorrecto de argumentos.\n./avalancha\n./avalancha numIteraciones bitsACambiar\n");
 		exit(1);
 	}
@@ -14,7 +14,7 @@ int main(int argc, char **argv){
 	// Hayar número iteraciones y bits del texto y de la clave a cambiar en cada iteración
 	int numIteraciones, bitsACambiar;
 	if(argc == 1){
-		numIteraciones = 50000; //PONER ESTE VALOR BIEN, ESTÁ INVENTADO
+		numIteraciones = 50; //PONER ESTE VALOR BIEN, ESTÁ INVENTADO
 		bitsACambiar = 1;
 	}
 	else{
@@ -39,9 +39,10 @@ int main(int argc, char **argv){
 
 
 	int i;
-	//for(i=0;i<numIteraciones;i++){
+	for(i=0;i<numIteraciones;i++){
 		// Calcular aleatoriamente la clave y el primer número
-		k = RAND_bytes(k, 32);
-		x = RAND_bytes(k2, 32);
+		RAND_bytes(k, 32);
+		RAND_bytes(x, 8);
+		
 	}
 }
