@@ -5,12 +5,13 @@
 
 int main(int argc, char **argv){
 
-// Obtener argumentos
+	// Comprobar número argumentos
 	if(argc != 1 || argc != 3){
 		fprintf(stderr, "Número incorrecto de argumentos.\n./avalancha\n./avalancha numIteraciones bitsACambiar\n");
 		exit(1);
 	}
 
+	// Hayar número iteraciones y bits del texto y de la clave a cambiar en cada iteración
 	int numIteraciones, bitsACambiar;
 	if(argc == 1){
 		numIteraciones = 50000; //PONER ESTE VALOR BIEN, ESTÁ INVENTADO
@@ -22,11 +23,25 @@ int main(int argc, char **argv){
 	}
 
 
+	// Buffers donde guardar los bits aleatorios generados (64 bits = 8 bytes)
+	unsigned char *x = (unsigned char*)malloc(8);
+	unsigned char *x2 = (unsigned char*)malloc(8);
+	unsigned char *y = (unsigned char*)malloc(8);
+	unsigned char *y2 = (unsigned char*)malloc(8);
+	unsigned char *y3 = (unsigned char*)malloc(8);
 
-	int contadoresDH[65];
+	// Buffers donde guardar las claves (256 bits = 32 bytes)
+	unsigned char *k = (unsigned char*)malloc(32);
+	unsigned char *k2 = (unsigned char*)malloc(32);
+
+	// Arrays con contadores para las distancias de Hamming
+	int contadoresDHTexto[65], contadoresDHClave[65];
+
 
 	int i;
-	for(i=0;i<numIteraciones;i++){
-		//bucle
+	//for(i=0;i<numIteraciones;i++){
+		// Calcular aleatoriamente la clave y el primer número
+		k = RAND_bytes(k, 32);
+		x = RAND_bytes(k2, 32);
 	}
 }
