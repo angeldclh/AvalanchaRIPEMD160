@@ -1,4 +1,4 @@
-/* Compilar con la opción -lcrypto al final */
+/* gcc avalancha.c -o avalancha -lcrypto */
 #include <stdio.h>
 #include <stdlib.h>
 #include <openssl/rand.h>
@@ -7,22 +7,19 @@
 int main(int argc, char **argv){
 
 	// Comprobar número argumentos
-	if(argc != 1 && argc != 3){
-		fprintf(stderr, "Número incorrecto de argumentos.\n./avalancha\n./avalancha numIteraciones bitsACambiar\n");
+	if(argc != 1 && argc != 2){
+		fprintf(stderr, "Número incorrecto de argumentos.\n./avalancha\n./avalancha numIteraciones\n");
 		exit(1);
 	}
 
-
 	// Hayar número iteraciones y bits del texto y de la clave a cambiar en cada iteración
-	int numIteraciones, bitsACambiar;
+	int numIteraciones;
 	if(argc == 1){
 		numIteraciones = 50; //PONER ESTE VALOR BIEN, ESTÁ INVENTADO. TAMBIÉN EN EL PRINTF
-		bitsACambiar = 1;
-		printf("No se especifican argumentos, se asumen 50 iteraciones con 1 bit cambiante para claves y texto a cifrar.\n");
+		printf("No se especifican argumentos, se asumen 50 iteraciones.\n");
 	}
 	else{
 		numIteraciones = atoi(argv[1]);
-		bitsACambiar = atoi(argv[2]);
 	}
 
 
@@ -38,15 +35,30 @@ int main(int argc, char **argv){
 	unsigned char *k2 = (unsigned char*)malloc(32);
 
 	// Arrays con contadores para las distancias de Hamming
-	int contadoresDHTexto[65], contadoresDHClave[65];
+	int contDHC[65], contDHK[257];
 
-	int i;
+	int i, j, dhc, dhk;
 	for(i=0;i<numIteraciones;i++){
 		// Calcular aleatoriamente la clave y el primer número
 		RAND_bytes(k, 32);
 		RAND_bytes(x, 8);
-		// Alterar bitsACambiar bits de k y x para obtener k2 y x2
-		
+		// Alterar 1 bit de k y x para obtener k2 y x2
+		k2 = k ^ 1 << (i%256);
+		x2 = x ^ 1 << (i%64);
+		// Cifrar x y x2 con la clave k y x con la clave k2
+		y = gost(x, k);
+		y2 = gost(x2, k);
+		y3 = gost(x, k2);
+		// Calcular distancias de Hamming
+		dhc = hammingDist(y, y2);
+		dhk = hammingDist(y, y3);
+		// Actualizar contadores
+		for(j=0;j<65;j++){
+			if (dhc==j) contDHC[j]++;
+		}
+		for(j=0;j<257;j++){
+			if (dhk==j) contDHK[j]++;
+		}
 	}
 
 	// Liberar memoria asignada
@@ -57,4 +69,6 @@ int main(int argc, char **argv){
 	free(y3);
 	free(k);
 	free(k2);
+
+	return 0;
 }
