@@ -2,10 +2,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <openssl/rand.h>
+#include <string.h>
 
-
+// Calcular distancia de Hamming de dos strings de igual tamaño: número de 1s de su XOR a nivel de bit
 int hammingDist(unsigned char *a, unsigned char *b){
-	return 3;
+	int dist = 0;
+	int i;
+	for(i=0;i<strlen(a);i++){
+		if(a[i] ^ b[i])
+			dist++;
+	}
+	return dist;
 }
 
 int main(int argc, char **argv){
@@ -41,8 +48,9 @@ int main(int argc, char **argv){
 	// Arrays con contadores para las distancias de Hamming
 	int contDHC[65], contDHK[257];
 
-	int i, j, dhc, dhk;
-	for(i=0;i<numIteraciones;i++){
+	//int i, j, dhc, dhk;
+	int i=5;
+	//for(i=0;i<numIteraciones;i++){
 		// Calcular aleatoriamente la clave y el primer número
 		RAND_bytes(k, 32);
 		RAND_bytes(x, 8);
@@ -54,8 +62,11 @@ int main(int argc, char **argv){
 		y2 = gost(x2, k);
 		y3 = gost(x, k2);*/
 		// Calcular distancias de Hamming
-		dhc = hammingDist(y, y2);
-		dhk = hammingDist(y, y3);
+		int dhc = hammingDist(x, x2);
+		int dhk = hammingDist(k, k2);
+		printf("dhc = %i; dhk = %i", dhc, dhk);
+		return 0;
+/*
 		// Actualizar contadores
 		for(j=0;j<65;j++){
 			if (dhc==j) contDHC[j]++;
@@ -63,7 +74,7 @@ int main(int argc, char **argv){
 		for(j=0;j<257;j++){
 			if (dhk==j) contDHK[j]++;
 		}
-	}
+	//}
 
 	// Imprimir contadores
 	for(j=0;j<65;j++){
@@ -83,4 +94,5 @@ int main(int argc, char **argv){
 	free(k2);
 
 	return 0;
+	*/
 }
