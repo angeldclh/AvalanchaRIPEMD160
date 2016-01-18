@@ -12,6 +12,7 @@ int main(int argc, char **argv){
 		exit(1);
 	}
 
+
 	// Hayar número iteraciones y bits del texto y de la clave a cambiar en cada iteración
 	int numIteraciones, bitsACambiar;
 	if(argc == 1){
