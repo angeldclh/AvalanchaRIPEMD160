@@ -4,6 +4,10 @@
 #include <openssl/rand.h>
 
 
+int hammingDist(unsigned char *a, unsigned char *b){
+	return 3;
+}
+
 int main(int argc, char **argv){
 
 	// Comprobar número argumentos
@@ -43,12 +47,12 @@ int main(int argc, char **argv){
 		RAND_bytes(k, 32);
 		RAND_bytes(x, 8);
 		// Alterar 1 bit de k y x para obtener k2 y x2
-		k2 = k ^ 1 << (i%256);
-		x2 = x ^ 1 << (i%64);
+		*k2 = *k ^ 1 << (i%256);
+		*x2 = *x ^ 1 << (i%64);
 		// Cifrar x y x2 con la clave k y x con la clave k2
-		y = gost(x, k);
+		/*y = gost(x, k);
 		y2 = gost(x2, k);
-		y3 = gost(x, k2);
+		y3 = gost(x, k2);*/
 		// Calcular distancias de Hamming
 		dhc = hammingDist(y, y2);
 		dhk = hammingDist(y, y3);
@@ -59,6 +63,14 @@ int main(int argc, char **argv){
 		for(j=0;j<257;j++){
 			if (dhk==j) contDHK[j]++;
 		}
+	}
+
+	// Imprimir contadores
+	for(j=0;j<65;j++){
+		printf("Distancia Hamming entre criptogramas alterando 1 bit del texto = %d: %d veces.\n", j, contDHC[j]);
+	}
+	for(j=0;j<257;j++){
+		printf("Distancia Hamming entre criptogramas alterando 1 bit de la clave = %d: %d veces.\n", j, contDHK[j]);
 	}
 
 	// Liberar memoria asignada
