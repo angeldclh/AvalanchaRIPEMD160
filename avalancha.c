@@ -12,7 +12,7 @@ int hammingDist(unsigned char *a, unsigned char *b){ //REVISAR
 
   int dist = 0;
   int i;
-  for(i=0;i<strlen(a);i++){
+  for(i=0;i<strlen((char*)a);i++){
     if(a[i] ^ b[i])
       dist++;
   }
@@ -51,12 +51,13 @@ int main(int argc, char **argv){
   int *distancias = (int*) malloc(161*sizeof(int));
 
   int itsTotales = numIteraciones*NUMBITS;
-  int i, totalDH;
+  int i, totalDH=0;
   /* Cada iteración altera un bit distinto del texto en claro. Tantas como indique el parámetro * nº bits de texto
      en claro (NUMBITS)*/
   for(i=0;i<itsTotales;i++){
     // Calcular aleatoriamente el número
     RAND_bytes(x, NUMBITS/8);
+    
     // Alterar 1 bit de x para obtener x2. 
     *x2 = *x ^ 1 << (i%NUMBITS);
     // Hash de x y de x2
@@ -75,8 +76,8 @@ int main(int argc, char **argv){
       
   // Imprimir contadores
   printf("Distancias de Hamming entre hashes alterando 1 bit del texto:\n");
-  for(j=0;j<161;j++){
-    printf("%d: %d veces.\n", j, distancias[j]);
+  for(i=0;i<161;i++){
+    printf("%d: %d veces.\n", i, distancias[i]);
   }
   printf("La distancia de Hamming media es %f\n", dhmedia);
 
