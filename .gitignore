@@ -34,6 +34,7 @@ avalancha
 
 # Emacs backups
 \#*
+*~
 
 # OSX attributes files
 .DS_Store
