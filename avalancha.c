@@ -5,7 +5,7 @@
 #include <openssl/evp.h>
 #include <string.h>
 
-#define RANDOMSIZE 20   //Tamaño en bytes de los números aleatorios a generar
+#define RANDOMSIZE 1   //Tamaño en bytes de los números aleatorios a generar
 #define HASHSIZE 20     //Tamaño en bytes del hash (RIPEMD-160, 160 b = 20 B)
 
 // Calcular distancia de Hamming de dos unsigned int: número de 1s de su XOR a nivel de bit
@@ -105,13 +105,14 @@ int main(int argc, char **argv){
 
 	// Inicializar hash
 	EVP_MD_CTX *mdctx = EVP_MD_CTX_create(); //reservar memoria
-	const EVP_MD *md = EVP_ripemd160();
+	const EVP_MD *md = /*EVP_sha512();*/EVP_ripemd160(); //Hash a emplear
 	EVP_DigestInit_ex(mdctx, md, NULL);
 	
 	int itsTotales = numRondas*RANDOMSIZE*8;
 	int i, dist, totalDH=0;
 	/* Cada iteración altera un bit distinto del texto en claro. Tantas como indique el parámetro * nº bits de texto
 	   en claro (NUMBITS)*/
+	
 	for(i=0;i<itsTotales;i++){
 		// Calcular aleatoriamente el número
 		RAND_bytes(x, RANDOMSIZE);
@@ -120,24 +121,34 @@ int main(int argc, char **argv){
 		*ix2 = *ix^(1<<(i%RANDOMSIZE));
 		memcpy(x2,ix2,RANDOMSIZE);
 
+		printf("N1 = %ul\n", *ix);
+		printf("N2 = %ul\n", *ix2);
+
 
 		// Hash de x y de x2
 		EVP_DigestUpdate(mdctx, x, RANDOMSIZE); //hashear x
+
 		EVP_DigestFinal_ex(mdctx, h, NULL); //Escribir el hash de x en h
-		EVP_MD_CTX_cleanup(mdctx); // Resetear contexto para reutilizarlo
+
+		//EVP_MD_CTX_cleanup(mdctx); // Resetear contexto para reutilizarlo
+
 
 		EVP_DigestUpdate(mdctx, x2, RANDOMSIZE); //hashear x2
-		EVP_DigestFinal_ex(mdctx, h2, NULL); //Escribir el hash de x2 en h2
-		EVP_MD_CTX_cleanup(mdctx); // Resetear contexto para reutilizarlo
 
+		EVP_DigestFinal_ex(mdctx, h2, NULL); //Escribir el hash de x2 en h2
+
+		//EVP_MD_CTX_cleanup(mdctx); // Resetear contexto para reutilizarlo
+
+		
 		// Distancia de Hamming entre hashes
 		memcpy(ih,h,HASHSIZE);
 		memcpy(ih2,h2,HASHSIZE);
-		dist = hammingDist(*ih, *ih2);
+		dist = hammingDist(*ih, *ih2); //OJO
 		distancias[dist]++;
 		totalDH += dist;
     
 	}
+	EVP_MD_CTX_cleanup(mdctx);
 	EVP_MD_CTX_destroy(mdctx); // Liberar memoria usada por la función hash
 
 	//Calcular distancia de Hamming media
@@ -146,9 +157,9 @@ int main(int argc, char **argv){
       
 	// Imprimir contadores
 	printf("Distancias de Hamming entre hashes alterando 1 bit del texto:\n");
-	for(i=0;i<161;i++){
-		printf("%d: %d veces.\n", i, distancias[i]);
-	}
+	//	for(i=0;i<161;i++){
+	//	printf("%d: %d veces.\n", i, distancias[i]);
+	//}
 	printf("La distancia de Hamming media es %f\n", dhmedia);
 
 	// Liberar memoria asignada
