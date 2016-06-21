@@ -5,8 +5,8 @@
 #include <openssl/evp.h>
 #include <string.h>
 
-#define RANDOMSIZE 20   //Número de bytes de los números aleatorios a generar
-#define HASHSIZE 20     //Número de bytes del hash (160 bits)
+#define RANDOMSIZE 20   //Tamaño en bytes de los números aleatorios a generar
+#define HASHSIZE 20     //Tamaño en bytes del hash (RIPEMD-160, 160 b = 20 B)
 
 // Calcular distancia de Hamming de dos unsigned int: número de 1s de su XOR a nivel de bit
 int hammingDist(unsigned int a, unsigned int b){ 
@@ -33,27 +33,60 @@ int main(int argc, char **argv){
 	}
 
 
-	// Buffers donde guardar los bits aleatorios generados (VER LONGITUD) y sus hashes
-	unsigned char *x;
-	unsigned char *h;
-	unsigned char *x2;
-	unsigned char *h2;
+	// Buffers donde guardar los bits aleatorios generados y sus hashes
+	unsigned char *x, *h, *x2, *h2;
+	unsigned int *ix, *ih, *ix2, *ih2;
+	if (( x = (unsigned char*)malloc(RANDOMSIZE)) == NULL){
+		fprintf(stderr, "Error en malloc.\n");
+		return 1;
+	}
+	if (( h = (unsigned char*)malloc(HASHSIZE)) == NULL){
+		fprintf(stderr, "Error en malloc.\n");
+		free(x);
+		return 1;
+	}
+	if (( x2 = (unsigned char*)malloc(RANDOMSIZE)) == NULL){
+		fprintf(stderr, "Error en malloc.\n");
+		free(x);
+		free(h);
+		return 1;
+	}
+	if (( h2 = (unsigned char*)malloc(HASHSIZE)) == NULL){ //hash: 160b=20B.
+		fprintf(stderr, "Error en malloc.\n");
+		free(x);
+		free(h);
+		free(x2);
+		return 1;
+	}
 	// Para cambiar 1 bit y para el popcount mejor unsigned int
-	unsigned int *ix;
-	unsigned int *ix2;
-	unsigned int *ih;
-	unsigned int *ih2;
-
-	if(
-	   ((x = (unsigned char*)malloc(RANDOMSIZE)) == NULL) ||
-	   ((h = (unsigned char*)malloc(HASHSIZE)) == NULL) || //hash: 160b=20B. 
-	   ((x2 = (unsigned char*)malloc(RANDOMSIZE)) == NULL) ||
-	   ((h2 = (unsigned char*)malloc(HASHSIZE)) == NULL) || //hash: 160b=20B. 
-	   ((ix = (unsigned int*)malloc(RANDOMSIZE)) == NULL) ||
-	   ((ix2 = (unsigned int*)malloc(RANDOMSIZE)) == NULL) ||
-	   ((ih = (unsigned int*)malloc(HASHSIZE)) == NULL) ||
-	   ((ih2 = (unsigned int*)malloc(HASHSIZE)) == NULL)){
-		
+	if (( ix = (unsigned int*)malloc(RANDOMSIZE)) == NULL){
+		fprintf(stderr, "Error en malloc.\n");
+		free(x);
+		free(h);
+		free(x2);
+		free(h2);
+		return 1;
+	}
+	if (( ix2 = (unsigned int*)malloc(RANDOMSIZE)) == NULL){
+		fprintf(stderr, "Error en malloc.\n");
+		free(x);
+		free(h);
+		free(x2);
+		free(h2);
+		free(ix);
+		return 1;
+	}
+	if (( ih = (unsigned int*)malloc(HASHSIZE)) == NULL){
+		fprintf(stderr, "Error en malloc.\n");
+		free(x);
+		free(h);
+		free(x2);
+		free(h2);
+		free(ix);
+		free(ix2);
+		return 1;
+	}
+	if (( ih2 = (unsigned int*)malloc(HASHSIZE)) == NULL){
 		fprintf(stderr, "Error en malloc.\n");
 		free(x);
 		free(h);
@@ -62,13 +95,19 @@ int main(int argc, char **argv){
 		free(ix);
 		free(ix2);
 		free(ih);
-		free(ih2);
+		return 1;
 	}
 	
 	/*distancias[z] contiene las veces que la distancia de Hamming entre hashes ha sido igual a z. Al tener el hash 160 bits,
 	  la distancia estará siempre en el intervalo [0,160]*/
 	int *distancias = (int*) malloc(161*sizeof(int));
 
+
+	// Inicializar hash
+	EVP_MD_CTX *mdctx = EVP_MD_CTX_create(); //reservar memoria
+	const EVP_MD *md = EVP_ripemd160();
+	EVP_DigestInit_ex(mdctx, md, NULL);
+	
 	int itsTotales = numRondas*RANDOMSIZE*8;
 	int i, dist, totalDH=0;
 	/* Cada iteración altera un bit distinto del texto en claro. Tantas como indique el parámetro * nº bits de texto
@@ -78,22 +117,28 @@ int main(int argc, char **argv){
 		RAND_bytes(x, RANDOMSIZE);
 		// Copiarlo a un unsigned int y cambiar 1 bit para calcular ambos hashes
 		memcpy(ix,x,RANDOMSIZE);
-		*ix2 = *ix^(1<<(i%NUMBITS));
+		*ix2 = *ix^(1<<(i%RANDOMSIZE));
 		memcpy(x2,ix2,RANDOMSIZE);
 
 
-
 		// Hash de x y de x2
-		/*h = hash(x);
-		  h2 = hash(x2);
-		*/
-		
-		// Calcular distancia de Hamming y guardarla
+		EVP_DigestUpdate(mdctx, x, RANDOMSIZE); //hashear x
+		EVP_DigestFinal_ex(mdctx, h, NULL); //Escribir el hash de x en h
+		EVP_MD_CTX_cleanup(mdctx); // Resetear contexto para reutilizarlo
+
+		EVP_DigestUpdate(mdctx, x2, RANDOMSIZE); //hashear x2
+		EVP_DigestFinal_ex(mdctx, h2, NULL); //Escribir el hash de x2 en h2
+		EVP_MD_CTX_cleanup(mdctx); // Resetear contexto para reutilizarlo
+
+		// Distancia de Hamming entre hashes
+		memcpy(ih,h,HASHSIZE);
+		memcpy(ih2,h2,HASHSIZE);
 		dist = hammingDist(*ih, *ih2);
 		distancias[dist]++;
 		totalDH += dist;
     
 	}
+	EVP_MD_CTX_destroy(mdctx); // Liberar memoria usada por la función hash
 
 	//Calcular distancia de Hamming media
 	double dhmedia = (double) totalDH / (double) itsTotales;
