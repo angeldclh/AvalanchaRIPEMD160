@@ -8,22 +8,14 @@
 #define NUMBITS 160   //Número de bits del texto en claro
 #define HASHSIZE 20  //Número de bytes del hash (160 bits)
 
-// Calcular distancia de Hamming de dos strings de tamaño HASHSIZE bytes: número de 1s de su XOR a nivel de bit
-int hammingDist(unsigned char *a, unsigned char *b){ 
-
-	int dist = 0;
-	unsigned char *c = (unsigned char *) malloc(HASHSIZE); //mismo tamaño que a y b
-	*c = *a ^ *b;
-	//Números de 1s de c = distancia de Hamming entre a y b
-
-	//TODO...
-	
-	return dist;
-      
+// Calcular distancia de Hamming de dos unsigned int: número de 1s de su XOR a nivel de bit
+int hammingDist(unsigned int a, unsigned int b){ 
+	unsigned int c = a ^ b;
+	return __builtin_popcount(c);  //Función de gcc/llvm  
 }
 
 int main(int argc, char **argv){
-
+	
 	// Comprobar número argumentos
 	if(argc > 2){
 		fprintf(stderr, "Número incorrecto de argumentos.\n./avalancha [numIteraciones]\n");
@@ -43,11 +35,16 @@ int main(int argc, char **argv){
 
 	// Buffers donde guardar los bits aleatorios generados (VER LONGITUD) y sus hashes
 	unsigned char *x = (unsigned char*)malloc(NUMBITS/8);
-	unsigned char *h = (unsigned char*)malloc(HASHSIZE); //hash: 160b=20B. Ver si es unsigned char o qué
+	unsigned char *h = (unsigned char*)malloc(HASHSIZE); //hash: 160b=20B. 
 	unsigned char *x2 = (unsigned char*)malloc(NUMBITS/8);
-	unsigned char *h2 = (unsigned char*)malloc(HASHSIZE); //hash: 160b=20B. Ver si es unsigned char o qué
+	unsigned char *h2 = (unsigned char*)malloc(HASHSIZE); //hash: 160b=20B. 
 
-
+	unsigned int *ix = (unsigned int*)malloc(NUMBITS/8);
+	unsigned int *ix2 = (unsigned int*)malloc(NUMBITS/8);	
+	
+	unsigned int *ih = (unsigned int*)malloc(NUMBITS/8/*HASHSIZE*/);
+	unsigned int *ih2 = (unsigned int*)malloc(NUMBITS/8/*HASHSIZE*/);	
+	
 	/*distancias[z] contiene las veces que la distancia de Hamming entre hashes ha sido igual a z. Al tener el hash 160 bits,
 	  la distancia estará siempre en el intervalo [0,160]*/
 	int *distancias = (int*) malloc(161*sizeof(int));
@@ -59,12 +56,17 @@ int main(int argc, char **argv){
 	for(i=0;i<itsTotales;i++){
 		// Calcular aleatoriamente el número
 		RAND_bytes(x, NUMBITS/8);
-    
+
+		memcpy(ix,x,NUMBITS/8);
+		*ix2 = *ix^(1<<(i%NUMBITS));
+		
 		// Alterar 1 bit de x para obtener x2. 
-		*x2 = *x ^= 1 << (i%NUMBITS);
+		//		*x2 = *x ^= 1 << (i%NUMBITS);
 
 		////////////////////////////////////////
-		int d = hammingDist(x,x2);
+		//memcpy(ih,x,NUMBITS/8);
+		//memcpy(ih2,x2,NUMBITS/8);
+		int d = hammingDist(*ix,*ix2);
 		printf("Debería ser 1 y es %d\n",d);
 		return 1;
 		////////////////////////////////////////
@@ -72,8 +74,11 @@ int main(int argc, char **argv){
 		/*h = hash(x);
 		  h2 = hash(x2);
 		*/
+		ih = (unsigned int *) &h;
+		ih2 = (unsigned int *) &h2;
+		
 		// Calcular distancia de Hamming y guardarla
-		distancias[hammingDist(h, h2)]++;
+		distancias[hammingDist(*ih, *ih2)]++;
 		totalDH += distancias[i];
     
 	}
@@ -94,6 +99,10 @@ int main(int argc, char **argv){
 	free(x2);
 	free(h);
 	free(h2);
+	free(ix);
+	free(ix2);
+	free(ih);
+	free(ih2);
 	free(distancias);
 
 	return 0;
