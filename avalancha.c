@@ -4,9 +4,10 @@
 #include <openssl/rand.h>
 #include <openssl/evp.h>
 #include <string.h>
+#include <math.h>
 
 
-#define RANDOMSIZE 200   //Tamaño en bytes del texto aleatorio a generar
+#define RANDOMSIZE 500   //Tamaño en bytes del texto aleatorio a generar
 #define HASHSIZE 20    //Tamaño en bytes del hash (RIPEMD-160, 160 b = 20 B)
 
 
@@ -100,14 +101,16 @@ int main(int argc, char **argv){
 	}
 
 	
-	/*distancias[z] contiene las veces que la distancia de Hamming entre hashes ha sido igual a z. Al tener el hash 160 bits,
+	/*distancias[z] contiene las veces (frecuencia) que la distancia de Hamming entre hashes ha sido igual a z. Al tener el hash 160 bits,
 	  la distancia estará siempre en el intervalo [0,160]*/
 	unsigned long *distancias = (unsigned long*) calloc(HASHSIZE*8+1, sizeof(unsigned long));
 
+
+	printf("\nObteniendo muestra...\n\n");
+	
 	// Inicializar hash
 	EVP_MD_CTX *mdctx = EVP_MD_CTX_create(); //reservar memoria
 	const EVP_MD *md = EVP_ripemd160(); //Hash a emplear. Posibilidades: https://www.openssl.org/docs/manmaster/crypto/EVP_DigestInit.html
-
 
 	int numBits = RANDOMSIZE*8;
 	int itsTotales = numRondas*numBits;
@@ -164,17 +167,32 @@ int main(int argc, char **argv){
 	
 
 	      
-	// Imprimir contadores
-	printf("Distancias de Hamming entre hashes alterando 1 bit del texto:\n");
+	// Imprimir contadores y calcular moda
+	unsigned long valorModa = 0;
+	int moda = 0;
+	long double auxDT = 0; //variable auxiliar para calcular la desviación típica
+	printf("Distancias de Hamming entre hashes alterando 1 bit del texto. Las distancias con frecuencia 0 no se muestran:\n");
 	for(i=0;i<161;i++){
-		printf("%d: %lu veces.\n", i, distancias[i]);	
+		if(distancias[i] > valorModa){ //Actualizar moda
+			valorModa = distancias[i];
+			moda = i;
+		}
+		auxDT += i*i*distancias[i];
+		
+		if(distancias[i] > 0)
+			printf("%d: %lu veces.\n", i, distancias[i]);	
 	}
 	fflush(stdout);
-	
-	//Calcular distancia de Hamming media
-	double dhmedia = ((double) totalDH / (double) itsTotales);
-	printf("La distancia de Hamming media es %lf\n", dhmedia);
 
+	//Calcular variables estadísticas
+	double dhmedia = ((double) totalDH / (double) itsTotales);
+	long double desvTipica = sqrtl((auxDT/(long double)itsTotales) - dhmedia*dhmedia);
+	
+	printf("Parámetros estadísticos de la muestra de distancias de Hamming obtenida:\n");
+	printf("Tamaño total de la muestra: %d\n", itsTotales);
+	printf("Media: %lf\n", dhmedia);
+	printf("Moda: %d; frecuencia absoluta: %lu; frecuencia relativa: %lf\n", moda, valorModa, (double)valorModa / (double)itsTotales);
+	printf("Desviación típica: %Lf\n", desvTipica);
 
 	// Liberar memoria asignada
 	free(x); free(x2);free(h); free(h2); free(lh); free(lh2); free(distancias); EVP_MD_CTX_destroy(mdctx); 
