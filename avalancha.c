@@ -10,7 +10,14 @@
 
 
 
-// Calcular distancia de Hamming de dos unsigned int: número de 1s de su XOR a nivel de bit
+/* Distancia de Hamming de dos elementos = número de 1s de su XOR a nivel de bit.
+   __builtin_popcount(unsigned long x) calcula el número de bits a 1 en x. Las funciones usadas
+   para calcular valores hash devuelven este como unsigned char *, por lo que su valor hay que
+   convertirlo a unsigned long. El tamaño del hash será muy probablemente mayor que los 8 B que
+   ocupa un unsigned long. Así, guardamos varios unsigned long consecutivos en cada argumento 
+   y calculamos la distancia de Hamming entre cada "pareja". Sumando estas distancias tenemos la
+   distancia de Hamming total entre los hashes*/ 
+  
 int hammingDist(unsigned long *a, unsigned long *b, int elems){
 	int dist = 0;
 	unsigned long c;
