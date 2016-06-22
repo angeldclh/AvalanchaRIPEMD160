@@ -102,7 +102,7 @@ int main(int argc, char **argv){
 	
 	/*distancias[z] contiene las veces que la distancia de Hamming entre hashes ha sido igual a z. Al tener el hash 160 bits,
 	  la distancia estará siempre en el intervalo [0,160]*/
-	int *distancias = (int*) calloc(HASHSIZE*8+1, sizeof(int));
+	unsigned long *distancias = (unsigned long*) calloc(HASHSIZE*8+1, sizeof(unsigned long));
 
 	// Inicializar hash
 	EVP_MD_CTX *mdctx = EVP_MD_CTX_create(); //reservar memoria
@@ -111,7 +111,8 @@ int main(int argc, char **argv){
 
 	int numBits = RANDOMSIZE*8;
 	int itsTotales = numRondas*numBits;
-	int i, dist, totalDH=0;
+	int i, dist;
+	unsigned long totalDH=0;
 	/* Cada iteración altera un bit distinto del texto en claro. */
 	for(i=0;i<itsTotales;i++){
 		// Calcular aleatoriamente el número
@@ -166,7 +167,7 @@ int main(int argc, char **argv){
 	// Imprimir contadores
 	printf("Distancias de Hamming entre hashes alterando 1 bit del texto:\n");
 	for(i=0;i<161;i++){
-		printf("%d: %d veces.\n", i, distancias[i]);	
+		printf("%d: %lu veces.\n", i, distancias[i]);	
 	}
 	fflush(stdout);
 	
