@@ -5,9 +5,9 @@
 #include <openssl/evp.h>
 #include <string.h>
 
+
 #define RANDOMSIZE 200   //Tamaño en bytes del texto aleatorio a generar
 #define HASHSIZE 20    //Tamaño en bytes del hash (RIPEMD-160, 160 b = 20 B)
-
 
 
 /* Distancia de Hamming de dos elementos = número de 1s de su XOR a nivel de bit.
@@ -106,7 +106,7 @@ int main(int argc, char **argv){
 
 	// Inicializar hash
 	EVP_MD_CTX *mdctx = EVP_MD_CTX_create(); //reservar memoria
-	const EVP_MD *md = /*EVP_sha512();*/EVP_ripemd160(); //Hash a emplear
+	const EVP_MD *md = EVP_ripemd160(); //Hash a emplear. Posibilidades: https://www.openssl.org/docs/manmaster/crypto/EVP_DigestInit.html
 
 
 	int numBits = RANDOMSIZE*8;
