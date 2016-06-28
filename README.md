@@ -2,7 +2,7 @@
 Estudio del efecto avalancha en el algoritmo criptográfico RIPEMD-160
 
 ## Compilación
-Es necesaria la librería OpenSSL. Se incluye un Makefile. Es posible que en el mismo haya que cambiar la ubicación de esta librería y de sus ficheros de cabecera todo depende de dónde tengamos la instalación de OpenSSL.
+Es necesaria la librería OpenSSL. Se incluye un Makefile. Es posible que en el mismo haya que cambiar la ubicación de esta librería y de sus ficheros de cabecera. Todo depende de dónde tengamos la instalación de OpenSSL.
 
 ## Uso
 El programa recibe, opcionalmente, un argumento. En él se indica un número que, multiplicado por la constante del programa *RANDOMSIZE*, nos da el número total de datos aleatorios (de tamaño *RANDOMSIZE*) a generar. 
