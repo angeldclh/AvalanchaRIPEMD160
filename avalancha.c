@@ -1,4 +1,4 @@
-/* gcc avalancha.c -o avalancha -lcrypto */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <openssl/rand.h>
